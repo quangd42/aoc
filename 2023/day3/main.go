@@ -2,15 +2,15 @@ package main
 
 import (
 	"bufio"
+	_ "embed"
 	"log"
-	"os"
 	"strconv"
+	"strings"
 	"unicode"
-
-	"github.com/quangd42/aoc/2023/puzzle"
 )
 
-type Solver struct{}
+//go:embed input.txt
+var input string
 
 type number struct {
 	val, xStart, xEnd, y int
@@ -67,8 +67,8 @@ func searchGrid(m []string, x, y int, tracker map[number]bool) []int {
 	return out
 }
 
-func (s Solver) Part1(f *os.File) int {
-	scanner := bufio.NewScanner(f)
+func part1(input string) int {
+	scanner := bufio.NewScanner(strings.NewReader(input))
 	// make matrix from file
 	// look for the symbol
 	matrix := []string{}
@@ -94,8 +94,8 @@ func (s Solver) Part1(f *os.File) int {
 	return res
 }
 
-func (s Solver) Part2(f *os.File) int {
-	scanner := bufio.NewScanner(f)
+func part2(input string) int {
+	scanner := bufio.NewScanner(strings.NewReader(input))
 	// make matrix from file
 	// look for the symbol
 	matrix := []string{}
@@ -121,5 +121,6 @@ func (s Solver) Part2(f *os.File) int {
 }
 
 func main() {
-	puzzle.Run(Solver{}, "day3")
+	println("Part 1: ", part1(input))
+	println("Part 2: ", part2(input))
 }

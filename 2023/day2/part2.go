@@ -4,14 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-func (s Solver) Part2(f *os.File) int {
-	scanner := bufio.NewScanner(f)
+func part2(input string) int {
+	scanner := bufio.NewScanner(strings.NewReader(input))
 	res := 0
 	for scanner.Scan() {
 		res += getPowerLine(scanner.Text())

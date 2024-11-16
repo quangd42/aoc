@@ -1,23 +1,21 @@
-package day1
+package main
 
 import (
 	"bufio"
 	"log"
-	"os"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
-type Solver struct{}
-
-func (s Solver) Part1(f *os.File) int {
-	scanner := bufio.NewScanner(f)
+func part1(input string) int {
+	scanner := bufio.NewScanner(strings.NewReader(input))
 	var res int
 	for scanner.Scan() {
 		res += getCalNum1(scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("error reading input: %w", err)
+		log.Fatalf("error reading input: %v", err)
 	}
 
 	return res

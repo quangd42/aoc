@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
+	_ "embed"
 	"log"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -15,10 +15,11 @@ const (
 	BlueCap
 )
 
-type Solver struct{}
+//go:embed input.txt
+var input string
 
-func (s Solver) Part1(f *os.File) int {
-	scanner := bufio.NewScanner(f)
+func part1(input string) int {
+	scanner := bufio.NewScanner(strings.NewReader(input))
 	res := 0
 	lineCount := 0
 	for scanner.Scan() {
