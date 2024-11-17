@@ -35,12 +35,12 @@ func Test_part1(t *testing.T) {
 		{
 			"first line",
 			"1abc2",
-			12,
+			0,
 		},
 		{
 			"full example 1",
 			example1,
-			142,
+			0,
 		},
 	}
 	for _, tt := range tests {
@@ -57,12 +57,12 @@ func Test_part2(t *testing.T) {
 		{
 			"first line",
 			"two1nine",
-			29,
+			0,
 		},
 		{
 			"full example",
 			example2,
-			281,
+			0,
 		},
 	}
 	for _, tt := range tests {
