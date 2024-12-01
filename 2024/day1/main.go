@@ -3,13 +3,12 @@ package main
 import (
 	"bufio"
 	_ "embed"
-	"fmt"
 	"log"
 	"math"
 	"slices"
-	"strconv"
 	"strings"
-	"time"
+
+	"github.com/quangd42/aoc/parse"
 )
 
 //go:embed input.txt
@@ -35,16 +34,9 @@ func parser(input string) lists {
 		if len(ns) < 2 {
 			log.Fatal("not enough info", line)
 		}
-		l, err := strconv.Atoi(ns[0])
-		if err != nil {
-			log.Fatal("line contains not int", line)
-		}
-		left = append(left, l)
-		r, err := strconv.Atoi(ns[1])
-		if err != nil {
-			log.Fatal("line contains not int", line)
-		}
-		right = append(right, r)
+
+		left = append(left, parse.Int(ns[0]))
+		right = append(right, parse.Int(ns[1]))
 	}
 	return lists{
 		left:  left,
@@ -64,7 +56,6 @@ func part1(input string) int {
 }
 
 func part2(input string) int {
-	start := time.Now()
 	lists := parser(input)
 	cache := map[int]int{}
 	out := 0
@@ -75,6 +66,5 @@ func part2(input string) int {
 		count := cache[n]
 		out += n * count
 	}
-	fmt.Printf("Part 2 took %s\n", time.Since(start))
 	return out
 }
