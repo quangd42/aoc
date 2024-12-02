@@ -15,13 +15,17 @@ func main() {
 }
 
 func part1(input string) int {
+	out := 0
 	scanner := bufio.NewScanner(strings.NewReader(input))
-	_ = scanner
-	return 0
+	for scanner.Scan() {
+	}
+	return out
 }
 
 func part2(input string) int {
+	out := 0
 	scanner := bufio.NewScanner(strings.NewReader(input))
-	_ = scanner
-	return 0
+	for scanner.Scan() {
+	}
+	return out
 }

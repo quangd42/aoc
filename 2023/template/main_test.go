@@ -15,16 +15,6 @@ a1b2c3d4e5f
 treb7uchet
 `
 
-var example2 string = `
-two1nine
-eightwothree
-abcone2threexyz
-xtwone3four
-4nineeightseven2
-zoneight234
-7pqrstsixteen
-`
-
 type test struct {
 	name, input string
 	want        int
@@ -33,13 +23,8 @@ type test struct {
 func Test_part1(t *testing.T) {
 	tests := []test{
 		{
-			"first line",
-			"1abc2",
-			0,
-		},
-		{
 			"full example 1",
-			example1,
+			example,
 			0,
 		},
 	}
@@ -55,13 +40,8 @@ func Test_part1(t *testing.T) {
 func Test_part2(t *testing.T) {
 	tests := []test{
 		{
-			"first line",
-			"two1nine",
-			0,
-		},
-		{
 			"full example",
-			example2,
+			example,
 			0,
 		},
 	}
