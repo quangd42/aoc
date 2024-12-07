@@ -8,6 +8,9 @@ import (
 //go:embed example.txt
 var example string
 
+//go:embed example1.txt
+var example1 string
+
 type test struct {
 	name, input string
 	want        int
@@ -36,6 +39,11 @@ func Test_part2(t *testing.T) {
 			"full example",
 			example,
 			6,
+		},
+		{
+			"smaller example",
+			example1,
+			3,
 		},
 	}
 	for _, tt := range tests {

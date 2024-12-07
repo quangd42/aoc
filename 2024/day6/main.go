@@ -2,8 +2,12 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"log"
+	"maps"
+	"slices"
 	"strings"
+	"time"
 )
 
 //go:embed input.txt
@@ -22,49 +26,6 @@ type position struct {
 	x, y int
 }
 
-func (p position) canReach(o position, m []string) bool {
-	if p.x == o.x && p.y == o.y {
-		return true
-	}
-	cur := position{p.x, p.y}
-	switch {
-	case cur.x == o.x && o.y < cur.y:
-		for o.y < cur.y {
-			cur.y--
-			if m[cur.y][cur.x] == '#' {
-				return false
-			}
-		}
-		return true
-	case cur.x == o.x && o.y > cur.y:
-		for o.y > cur.y {
-			cur.y++
-			if m[cur.y][cur.x] == '#' {
-				return false
-			}
-		}
-		return true
-	case cur.y == o.y && o.x > cur.x:
-		for o.x > cur.x {
-			cur.x++
-			if m[cur.y][cur.x] == '#' {
-				return false
-			}
-		}
-		return true
-	case cur.y == o.y && o.x < cur.x:
-		for o.x < cur.x {
-			cur.x--
-			if m[cur.y][cur.x] == '#' {
-				return false
-			}
-		}
-		return true
-	}
-	log.Fatal("something went wrong with canReach")
-	return false
-}
-
 var (
 	up    = direction{0, -1}
 	right = direction{1, 0}
@@ -73,9 +34,9 @@ var (
 	dirs  = []direction{up, right, down, left}
 )
 
-func getStartPos(m []string) position {
+func getStartPos(grid []string) position {
 	pos := position{}
-	for y, row := range m {
+	for y, row := range grid {
 		for x := range row {
 			if row[x] == '^' {
 				pos.x = x
@@ -86,9 +47,9 @@ func getStartPos(m []string) position {
 	return pos
 }
 
-func isInbound(p position, m []string) bool {
-	maxX := len(m[0]) - 1
-	maxY := len(m) - 1
+func isInbound(p position, grid []string) bool {
+	maxX := len(grid[0]) - 1
+	maxY := len(grid) - 1
 	if 0 <= p.x && p.x <= maxX && 0 <= p.y && p.y <= maxY {
 		return true
 	}
@@ -96,98 +57,117 @@ func isInbound(p position, m []string) bool {
 }
 
 func part1(input string) int {
-	gameMap := strings.Split(strings.TrimSpace(input), "\n")
-	guardPos := getStartPos(gameMap)
+	grid := strings.Split(strings.TrimSpace(input), "\n")
+	guardPos := getStartPos(grid)
 
 	curDirIdx := 0
-	walked := map[position]bool{}
+	walked := map[walkedPosition]bool{}
 
-	for {
-		next := position{
-			guardPos.x + dirs[curDirIdx].x,
-			guardPos.y + dirs[curDirIdx].y,
-		}
-		if !isInbound(next, gameMap) {
-			break
-		}
-
-		if gameMap[next.y][next.x] == '#' {
-			curDirIdx = (curDirIdx + 1 + len(dirs)) % len(dirs)
-			continue
-		}
-		guardPos.x = next.x
-		guardPos.y = next.y
-		walked[guardPos] = true
+	steps, exited := walkGrid(guardPos, curDirIdx, grid, walked)
+	if !exited {
+		log.Fatal("stuck in a loop somewhere")
 	}
-	return len(walked)
+	return steps
 }
 
 // WARNING: This sadly does not give correct answer even though it passes the example test
+// I'm missing a corner case somewhere
 
-func getNextDir(idx int) direction {
-	idx = (idx + 1 + len(dirs)) % len(dirs)
-	return dirs[idx]
+type walkedPosition struct {
+	pos position
+	dir direction
 }
 
-func part2(input string) int {
-	gameMap := strings.Split(strings.TrimSpace(input), "\n")
-	guardPos := getStartPos(gameMap)
-
-	curDirIdx := 0
-	var nextDir direction
-	lineWalked := map[direction][]position{
-		up:    {guardPos},
-		right: {},
-		down:  {},
-		left:  {},
+func NewWalkedPos(p position, d direction) walkedPosition {
+	return walkedPosition{
+		pos: position{p.x, p.y},
+		dir: direction{d.x, d.y},
 	}
+}
 
-	placedPos := map[position]bool{}
+func walkGrid(cur position, curDirIdx int, grid []string, wps map[walkedPosition]bool) (int, bool) {
+	walked := map[position]bool{}
+	var next position
 	for {
-		next := position{
-			guardPos.x + dirs[curDirIdx].x,
-			guardPos.y + dirs[curDirIdx].y,
+		next = position{
+			cur.x + dirs[curDirIdx].x,
+			cur.y + dirs[curDirIdx].y,
 		}
-		if !isInbound(next, gameMap) {
-			break
-		}
-
-		nextDir = getNextDir(curDirIdx)
-		walkedStartPoints := lineWalked[nextDir]
-
-		for _, wsp := range walkedStartPoints {
-			switch nextDir {
-			case up:
-				if guardPos.x == wsp.x && (guardPos.y <= wsp.y || (guardPos.y > wsp.y && guardPos.canReach(wsp, gameMap))) {
-					placedPos[next] = true
-				}
-			case down:
-				if guardPos.x == wsp.x && (guardPos.y >= wsp.y || (guardPos.y <= wsp.y && guardPos.canReach(wsp, gameMap))) {
-					placedPos[next] = true
-				}
-			case left:
-				if guardPos.y == wsp.y && (guardPos.x <= wsp.x || (guardPos.x > wsp.x && guardPos.canReach(wsp, gameMap))) {
-					placedPos[next] = true
-				}
-			case right:
-				if guardPos.y == wsp.y && (guardPos.x >= wsp.x || (guardPos.x < wsp.x && guardPos.canReach(wsp, gameMap))) {
-					placedPos[next] = true
-				}
-			}
+		if !isInbound(next, grid) {
+			return len(walked), true
 		}
 
-		if gameMap[next.y][next.x] == '#' {
+		if grid[next.y][next.x] == '#' {
 			curDirIdx = (curDirIdx + 1 + len(dirs)) % len(dirs)
-			lineWalked[dirs[curDirIdx]] = append(lineWalked[dirs[curDirIdx]], position{
-				guardPos.x,
-				guardPos.y,
-			})
 			continue
 		}
 
-		guardPos.x = next.x
-		guardPos.y = next.y
+		// check if this next step is already made
+		wp := NewWalkedPos(next, dirs[curDirIdx])
+		if _, ok := wps[wp]; ok {
+			return len(walked), false
+		}
+		wps[wp] = true
+
+		// actually make the step
+		cur.x = next.x
+		cur.y = next.y
+		walked[cur] = true
+	}
+}
+
+func part2(input string) int {
+	startTime := time.Now()
+	grid := strings.Split(strings.TrimSpace(input), "\n")
+	startPos := getStartPos(grid)
+	cur := startPos
+
+	curDirIdx := 0
+
+	loopPos := map[position]bool{}
+	wps := map[walkedPosition]bool{}
+	// Mark off the starting pos
+	wps[NewWalkedPos(cur, dirs[curDirIdx])] = true
+
+	for {
+		next := position{
+			cur.x + dirs[curDirIdx].x,
+			cur.y + dirs[curDirIdx].y,
+		}
+		// If next is out of bound, can's go there or place obstacle there
+		if !isInbound(next, grid) {
+			break
+		}
+
+		// If next is a block already, just change direction
+		if grid[next.y][next.x] == '#' {
+			curDirIdx = (curDirIdx + 1 + len(dirs)) % len(dirs)
+			continue
+		}
+
+		// Check whether we will create a loop if we block next pos
+		wpsClone := maps.Clone(wps)
+		gridClone := slices.Clone(grid)
+		// --all this to modify a char in row...
+		rowCloneRune := []rune(gridClone[next.y])
+		rowCloneRune[next.x] = '#'
+		gridClone[next.y] = string(rowCloneRune)
+		// --
+		_, exited := walkGrid(cur, curDirIdx, gridClone, wpsClone)
+		if !exited {
+			loopPos[next] = true
+		}
+
+		// Actually make the move
+		cur.x = next.x
+		cur.y = next.y
+		wps[NewWalkedPos(cur, dirs[curDirIdx])] = true
 	}
 
-	return len(placedPos)
+	fmt.Println("part 2 took ", time.Since(startTime))
+	// Can't place the obstacle at the starting pos
+	if _, ok := loopPos[startPos]; ok {
+		return len(loopPos) - 1
+	}
+	return len(loopPos)
 }
