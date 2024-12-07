@@ -6,6 +6,7 @@ import (
 	"log"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -13,8 +14,10 @@ import (
 var input string
 
 func main() {
-	println("Part 1: ", part1(input))
-	println("Part 2: ", part2(input))
+	st1 := time.Now()
+	fmt.Printf("Part 1: %d     %v\n", part1(input), time.Since(st1))
+	st2 := time.Now()
+	fmt.Printf("Part 2: %d     %v\n", part2(input), time.Since(st2))
 }
 
 type direction struct {
@@ -118,7 +121,6 @@ func walkGrid(cur position, curDirIdx int, grid []string) (int, bool) {
 }
 
 func part2(input string) int {
-	startTime := time.Now()
 	grid := strings.Split(strings.TrimSpace(input), "\n")
 	startPos := getStartPos(grid)
 	cur := startPos
@@ -127,6 +129,9 @@ func part2(input string) int {
 
 	loopPos := map[position]bool{}
 	wps := map[state]bool{}
+
+	ch := make(chan position)
+	var wg sync.WaitGroup
 
 	for {
 		next := position{
@@ -145,9 +150,9 @@ func part2(input string) int {
 		}
 
 		// Check whether we will create a loop if we block next pos
-		// can't place the blocker at the starting position
-		// skip checking if it's already confirmed
-		if next != startPos || loopPos[next] == false {
+		wg.Add(1)
+		go func(next position) {
+			defer wg.Done()
 			gridClone := slices.Clone(grid)
 			// --all this to modify a char in row...
 			rowCloneRune := []rune(gridClone[next.y])
@@ -156,17 +161,23 @@ func part2(input string) int {
 			// --
 			_, exited := walkGrid(startPos, 0, gridClone)
 			if !exited {
-				loopPos[next] = true
+				ch <- next
 			}
-		}
+		}(next)
 
 		// Actually make the move
 		cur.x = next.x
 		cur.y = next.y
 		wps[NewState(cur, dirs[curDirIdx])] = true
 	}
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
 
-	fmt.Println("part 2 took ", time.Since(startTime))
+	for p := range ch {
+		loopPos[p] = true
+	}
 
 	// Can't place obstacle at the starting position
 	if loopPos[startPos] {
