@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
-	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -61,9 +60,8 @@ func part1(input string) int {
 	guardPos := getStartPos(grid)
 
 	curDirIdx := 0
-	walked := map[walkedPosition]bool{}
 
-	steps, exited := walkGrid(guardPos, curDirIdx, grid, walked)
+	steps, exited := walkGrid(guardPos, curDirIdx, grid)
 	if !exited {
 		log.Fatal("stuck in a loop somewhere")
 	}
@@ -73,20 +71,23 @@ func part1(input string) int {
 // WARNING: This sadly does not give correct answer even though it passes the example test
 // I'm missing a corner case somewhere
 
-type walkedPosition struct {
+type state struct {
 	pos position
 	dir direction
 }
 
-func NewWalkedPos(p position, d direction) walkedPosition {
-	return walkedPosition{
+func NewState(p position, d direction) state {
+	return state{
 		pos: position{p.x, p.y},
 		dir: direction{d.x, d.y},
 	}
 }
 
-func walkGrid(cur position, curDirIdx int, grid []string, wps map[walkedPosition]bool) (int, bool) {
+func walkGrid(cur position, curDirIdx int, grid []string) (int, bool) {
 	walked := map[position]bool{}
+	wps := map[state]bool{
+		NewState(cur, dirs[curDirIdx]): true,
+	}
 	var next position
 	for {
 		next = position{
@@ -103,7 +104,7 @@ func walkGrid(cur position, curDirIdx int, grid []string, wps map[walkedPosition
 		}
 
 		// check if this next step is already made
-		wp := NewWalkedPos(next, dirs[curDirIdx])
+		wp := NewState(next, dirs[curDirIdx])
 		if _, ok := wps[wp]; ok {
 			return len(walked), false
 		}
@@ -125,9 +126,7 @@ func part2(input string) int {
 	curDirIdx := 0
 
 	loopPos := map[position]bool{}
-	wps := map[walkedPosition]bool{}
-	// Mark off the starting pos
-	wps[NewWalkedPos(cur, dirs[curDirIdx])] = true
+	wps := map[state]bool{}
 
 	for {
 		next := position{
@@ -146,27 +145,31 @@ func part2(input string) int {
 		}
 
 		// Check whether we will create a loop if we block next pos
-		wpsClone := maps.Clone(wps)
-		gridClone := slices.Clone(grid)
-		// --all this to modify a char in row...
-		rowCloneRune := []rune(gridClone[next.y])
-		rowCloneRune[next.x] = '#'
-		gridClone[next.y] = string(rowCloneRune)
-		// --
-		_, exited := walkGrid(cur, curDirIdx, gridClone, wpsClone)
-		if !exited {
-			loopPos[next] = true
+		// can't place the blocker at the starting position
+		// skip checking if it's already confirmed
+		if next != startPos || loopPos[next] == false {
+			gridClone := slices.Clone(grid)
+			// --all this to modify a char in row...
+			rowCloneRune := []rune(gridClone[next.y])
+			rowCloneRune[next.x] = '#'
+			gridClone[next.y] = string(rowCloneRune)
+			// --
+			_, exited := walkGrid(startPos, 0, gridClone)
+			if !exited {
+				loopPos[next] = true
+			}
 		}
 
 		// Actually make the move
 		cur.x = next.x
 		cur.y = next.y
-		wps[NewWalkedPos(cur, dirs[curDirIdx])] = true
+		wps[NewState(cur, dirs[curDirIdx])] = true
 	}
 
 	fmt.Println("part 2 took ", time.Since(startTime))
-	// Can't place the obstacle at the starting pos
-	if _, ok := loopPos[startPos]; ok {
+
+	// Can't place obstacle at the starting position
+	if loopPos[startPos] {
 		return len(loopPos) - 1
 	}
 	return len(loopPos)
