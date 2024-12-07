@@ -3,15 +3,19 @@ package main
 import (
 	"bufio"
 	_ "embed"
+	"fmt"
 	"strings"
+	"time"
 )
 
 //go:embed input.txt
 var input string
 
 func main() {
-	println("Part 1: ", part1(input))
-	println("Part 2: ", part2(input))
+	st1 := time.Now()
+	fmt.Printf("Part 1: %d     %v\n", part1(input), time.Since(st1))
+	st2 := time.Now()
+	fmt.Printf("Part 2: %d     %v\n", part2(input), time.Since(st2))
 }
 
 func part1(input string) int {
