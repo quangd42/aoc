@@ -8,12 +8,7 @@ import (
 //go:embed example.txt
 var example string
 
-var example1 string = `
-1abc2
-pqr3stu8vwx
-a1b2c3d4e5f
-treb7uchet
-`
+var example1 string = ` `
 
 type test struct {
 	name, input string

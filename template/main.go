@@ -12,6 +12,7 @@ import (
 var input string
 
 func main() {
+	input = strings.TrimSpace(input)
 	st1 := time.Now()
 	fmt.Printf("Part 1: %d     %v\n", part1(input), time.Since(st1))
 	st2 := time.Now()
