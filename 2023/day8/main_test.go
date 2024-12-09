@@ -11,6 +11,9 @@ var example string
 //go:embed example2.txt
 var example2 string
 
+//go:embed example_p2.txt
+var example_p2 string
+
 type test struct {
 	name, input string
 	want        int
@@ -42,8 +45,8 @@ func Test_part2(t *testing.T) {
 	tests := []test{
 		{
 			"full example",
-			example,
-			0,
+			example_p2,
+			6,
 		},
 	}
 	for _, tt := range tests {

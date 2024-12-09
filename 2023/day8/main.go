@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	_ "embed"
 	"fmt"
 	"log"
@@ -14,6 +13,8 @@ var input string
 
 type node struct {
 	name, left, right string
+	start, end        bool
+	steps             int
 }
 
 func parseNodes(s string) map[string]node {
@@ -27,6 +28,9 @@ func parseNodes(s string) map[string]node {
 			fmt.Println("malformed line", line)
 		}
 		name = strings.TrimSpace(name)
+		if len(name) != 3 {
+			log.Fatal("node name is too short:", name)
+		}
 		left, right, found = strings.Cut(dests, ",")
 		if !found {
 			fmt.Println("malformed line", line)
@@ -35,6 +39,8 @@ func parseNodes(s string) map[string]node {
 			name:  name,
 			left:  strings.Trim(left, "( "),
 			right: strings.Trim(right, ") "),
+			start: name[2] == 'A',
+			end:   name[2] == 'Z',
 		}
 	}
 	return out
@@ -64,22 +70,68 @@ func part1(input string) int {
 			switch r {
 			case 'L':
 				cur = nodes[cur.left]
-				out++
 			case 'R':
 				cur = nodes[cur.right]
-				out++
 			default:
 				log.Fatal("invalid instruction")
 			}
+			out++
 		}
 	}
 	return out
 }
 
+func moveAllNodes(ns []node, nodeMap map[string]node, r rune) {
+	for i := range ns {
+		switch r {
+		case 'L':
+			ns[i] = nodeMap[ns[i].left]
+		case 'R':
+			ns[i] = nodeMap[ns[i].right]
+		default:
+			log.Fatal("invalid instruction")
+		}
+	}
+}
+
 func part2(input string) int {
 	out := 0
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	for scanner.Scan() {
+	ins, nodeStr, found := strings.Cut(input, "\n\n")
+	if !found {
+		log.Fatal("bad input")
 	}
+	nodeMap := parseNodes(nodeStr)
+
+	ns := []node{}
+	for _, v := range nodeMap {
+		if v.start {
+			ns = append(ns, v)
+		}
+	}
+
+	for _, n := range ns {
+		count := 0
+		for !n.end {
+			for _, r := range strings.TrimSpace(ins) {
+				switch r {
+				case 'L':
+					n = nodeMap[n.left]
+				case 'R':
+					n = nodeMap[n.right]
+				default:
+					log.Fatal("invalid instruction")
+				}
+				count++
+			}
+		}
+		fmt.Println(count)
+	}
+
+	// turns out the input indeed allows each route to make a loop,
+	// it takes the same amount of steps for each route to get back to Z
+	// (found this out from the internet, thought about lcm but could not verify the condition for it)
+	//
+	// so count the steps for each route and find the Least Common Multiple online
+
 	return out
 }
