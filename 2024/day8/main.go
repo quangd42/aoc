@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/quangd42/aoc/grid"
 )
 
 //go:embed input.txt
@@ -18,49 +20,36 @@ func main() {
 	fmt.Printf("Part 2: %d     %v\n", part2(input), time.Since(st2))
 }
 
-type position struct {
-	x, y int
-}
+func markAntinodes(a, b grid.Pos, g grid.Grid, marked map[grid.Pos]bool) {
+	diff := grid.Dir{X: a.X - b.X, Y: a.Y - b.Y}
+	a1 := grid.Pos{X: b.X - diff.X, Y: b.Y - diff.Y}
+	a2 := grid.Pos{X: a.X + diff.X, Y: a.Y + diff.Y}
 
-func (p position) isInbound(grid []string) bool {
-	maxX := len(grid[0]) - 1
-	maxY := len(grid) - 1
-	if 0 <= p.x && p.x <= maxX && 0 <= p.y && p.y <= maxY {
-		return true
-	}
-	return false
-}
-
-func markAntinodes(a, b position, grid []string, marked map[position]bool) {
-	diff := position{a.x - b.x, a.y - b.y}
-	a1 := position{b.x - diff.x, b.y - diff.y}
-	a2 := position{a.x + diff.x, a.y + diff.y}
-
-	if a1.isInbound(grid) {
+	if a1.IsInbound(g) {
 		marked[a1] = true
 	}
-	if a2.isInbound(grid) {
+	if a2.IsInbound(g) {
 		marked[a2] = true
 	}
 }
 
 func part1(input string) int {
-	grid := strings.Split(input, "\n")
-	antennas := map[rune][]position{}
+	g := grid.NewGrid(input)
+	antennas := map[rune][]grid.Pos{}
 
-	for y, row := range grid {
+	for y, row := range g {
 		for x, r := range row {
 			if r != '.' {
-				antennas[r] = append(antennas[r], position{x, y})
+				antennas[r] = append(antennas[r], grid.Pos{X: x, Y: y})
 			}
 		}
 	}
 
-	marked := map[position]bool{}
+	marked := map[grid.Pos]bool{}
 	for _, ps := range antennas {
 		for i := 0; i < len(ps)-1; i++ {
 			for j := i + 1; j < len(ps); j++ {
-				markAntinodes(ps[i], ps[j], grid, marked)
+				markAntinodes(ps[i], ps[j], g, marked)
 			}
 		}
 	}
@@ -68,44 +57,44 @@ func part1(input string) int {
 	return len(marked)
 }
 
-func markAntinodes2(a, b position, grid []string, marked map[position]bool) {
-	diff := position{a.x - b.x, a.y - b.y}
-	a1 := position{b.x - diff.x, b.y - diff.y}
-	a2 := position{a.x + diff.x, a.y + diff.y}
+func markAntinodes2(a, b grid.Pos, g grid.Grid, marked map[grid.Pos]bool) {
 	marked[a] = true
 	marked[b] = true
+	diff := grid.Dir{X: a.X - b.X, Y: a.Y - b.Y}
 
+	b1 := b.Move(diff, -1)
 	i := 1
-	for a1.isInbound(grid) {
-		marked[a1] = true
+	for b1.IsInbound(g) {
+		marked[b1] = true
 		i++
-		a1 = position{b.x - diff.x*i, b.y - diff.y*i}
+		b1 = b.Move(diff, -i)
 	}
+	a1 := a.Move(diff, 1)
 	j := 1
-	for a2.isInbound(grid) {
-		marked[a2] = true
+	for a1.IsInbound(g) {
+		marked[a1] = true
 		j++
-		a2 = position{a.x + diff.x*j, a.y + diff.y*j}
+		a1 = b.Move(diff, j)
 	}
 }
 
 func part2(input string) int {
-	grid := strings.Split(input, "\n")
-	antennas := map[rune][]position{}
+	g := grid.NewGrid(input)
+	antennas := map[rune][]grid.Pos{}
 
-	for y, row := range grid {
+	for y, row := range g {
 		for x, r := range row {
 			if r != '.' {
-				antennas[r] = append(antennas[r], position{x, y})
+				antennas[r] = append(antennas[r], grid.Pos{X: x, Y: y})
 			}
 		}
 	}
 
-	marked := map[position]bool{}
+	marked := map[grid.Pos]bool{}
 	for _, ps := range antennas {
 		for i := 0; i < len(ps)-1; i++ {
 			for j := i + 1; j < len(ps); j++ {
-				markAntinodes2(ps[i], ps[j], grid, marked)
+				markAntinodes2(ps[i], ps[j], g, marked)
 			}
 		}
 	}
