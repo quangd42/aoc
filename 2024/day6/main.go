@@ -71,9 +71,6 @@ func part1(input string) int {
 	return steps
 }
 
-// WARNING: This sadly does not give correct answer even though it passes the example test
-// I'm missing a corner case somewhere
-
 type state struct {
 	pos position
 	dir direction
