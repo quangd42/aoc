@@ -19,6 +19,14 @@ func (g Grid) ValueAt(p Pos) rune {
 	return g[p.Y][p.X]
 }
 
+func (g Grid) String() string {
+	out := make([]string, len(g))
+	for i, l := range g {
+		out[i] = string(l)
+	}
+	return strings.Join(out, "\n")
+}
+
 // Direction aka Vector(?)
 type Dir struct {
 	X int
@@ -70,14 +78,14 @@ func Around8(p Pos) []Pos {
 }
 
 var (
-	Left      = Dir{-1, 0}
-	Right     = Dir{1, 0}
-	Up        = Dir{0, -1}
-	Down      = Dir{0, 1}
-	UpLeft    = Dir{-1, -1}
-	UpRight   = Dir{1, -1}
-	DownLeft  = Dir{-1, 1}
-	DownRight = Dir{1, 1}
-	FourDirs  = []Dir{Up, Right, Down, Left}
-	EightDirs = []Dir{Up, Right, Down, Left, UpLeft, UpRight, DownLeft, DownRight}
+	DirLeft      = Dir{-1, 0}
+	DirRight     = Dir{1, 0}
+	DirUp        = Dir{0, -1}
+	DirDown      = Dir{0, 1}
+	DirUpLeft    = Dir{-1, -1}
+	DirUpRight   = Dir{1, -1}
+	DirDownLeft  = Dir{-1, 1}
+	DirDownRight = Dir{1, 1}
+	FourDirs     = []Dir{DirUp, DirRight, DirDown, DirLeft}
+	EightDirs    = []Dir{DirUp, DirRight, DirDown, DirLeft, DirUpLeft, DirUpRight, DirDownLeft, DirDownRight}
 )
