@@ -8,16 +8,7 @@ import (
 //go:embed example.txt
 var example string
 
-var example1 string = `########
-#..O.O.#
-##@.O..#
-#...O..#
-#.#.O..#
-#...O..#
-#......#
-########
-
-<^^>>>vv<v>>v<<`
+var example1 string = ` `
 
 type test struct {
 	name, input string
@@ -27,14 +18,9 @@ type test struct {
 func Test_part1(t *testing.T) {
 	tests := []test{
 		{
-			"full example",
+			"full example 1",
 			example,
-			10092,
-		},
-		{
-			"example 1",
-			example1,
-			2028,
+			7036,
 		},
 	}
 	for _, tt := range tests {
@@ -51,7 +37,7 @@ func Test_part2(t *testing.T) {
 		{
 			"full example",
 			example,
-			9021,
+			0,
 		},
 	}
 	for _, tt := range tests {

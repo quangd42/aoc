@@ -65,9 +65,32 @@ func part1(input string) int {
 }
 
 type block struct {
-	val     []int
-	size    int
-	isEmpty bool
+	val []int
+}
+
+func (b block) String() string {
+	out := []rune{}
+	for _, i := range b.val {
+		if i == -1 {
+			out = append(out, '.')
+			continue
+		}
+		out = append(out, rune(i)+'0')
+	}
+	return string(out)
+}
+
+func (b block) isEmpty() bool {
+	for _, i := range b.val {
+		if i != -1 {
+			return false
+		}
+	}
+	return true
+}
+
+func (b block) size() int {
+	return len(b.val)
 }
 
 func parseIntoBuffer(s string) []block {
@@ -75,9 +98,7 @@ func parseIntoBuffer(s string) []block {
 	out := []block{}
 	for i, r := range s {
 		v := int(r - '0')
-		b := block{
-			size: v,
-		}
+		b := block{}
 
 		switch {
 		case v == 0:
@@ -91,7 +112,6 @@ func parseIntoBuffer(s string) []block {
 			for range v {
 				b.val = append(b.val, -1)
 			}
-			b.isEmpty = true
 			out = append(out, b)
 		}
 	}
@@ -99,16 +119,14 @@ func parseIntoBuffer(s string) []block {
 }
 
 func moveFile(buf []block, from, to int) []block {
-	if !buf[to].isEmpty {
+	if !buf[to].isEmpty() {
 		return buf
 	}
-	toChunk := buf[from].size != buf[to].size
+	toChunk := buf[from].size() != buf[to].size()
 
-	for i := range buf[from].size {
+	for i := range buf[from].size() {
 		buf[from].val[i], buf[to].val[i] = buf[to].val[i], buf[from].val[i]
 	}
-	buf[from].isEmpty = true
-	buf[to].isEmpty = false
 
 	if toChunk {
 		buf = splitBlock(buf, to)
@@ -117,7 +135,7 @@ func moveFile(buf []block, from, to int) []block {
 }
 
 func splitBlock(buf []block, i int) []block {
-	if buf[i].isEmpty {
+	if buf[i].isEmpty() {
 		return buf
 	}
 	// Find index of empty
@@ -131,13 +149,10 @@ func splitBlock(buf []block, i int) []block {
 
 	// Prepare empty block
 	nb := block{
-		val:     slices.Clone(buf[i].val[j:]),
-		isEmpty: true,
+		val: slices.Clone(buf[i].val[j:]),
 	}
-	nb.size = len(nb.val)
 
 	buf[i].val = slices.Clone(buf[i].val[:j])
-	buf[i].size = len(buf[i].val)
 
 	return slices.Insert(buf, i+1, nb)
 }
@@ -148,16 +163,30 @@ func part2(input string) int {
 	out := 0
 	buf := parseIntoBuffer(strings.TrimSpace(input))
 
-	for i := len(buf) - 1; i >= 0; i-- {
-		for j := 0; j < i; j++ {
-			if buf[j].isEmpty && !buf[i].isEmpty && buf[j].size >= buf[i].size {
-				buf = moveFile(buf, i, j)
+	bufOut := []block{}
+	for len(buf) > 0 {
+		// __AUTO_GENERATED_PRINT_VAR_START__
+		fmt.Println(fmt.Sprintf("part2 buf: %v", buf)) // __AUTO_GENERATED_PRINT_VAR_END__
+		li := len(buf) - 1
+		if !buf[li].isEmpty() {
+			for j := 0; j < li; j++ {
+				if buf[j].isEmpty() && buf[j].size() >= buf[li].size() {
+					buf = moveFile(buf, li, j)
+				}
+				if buf[li].size() == 2 {
+				}
 			}
 		}
+		li = len(buf) - 1
+		bufOut = append(bufOut, buf[li])
+		buf = buf[:li]
 	}
 
 	i := 0
-	for _, b := range buf {
+	slices.Reverse(bufOut)
+	// __AUTO_GENERATED_PRINT_VAR_START__
+	fmt.Println(fmt.Sprintf("part2 bufOut: %v", bufOut)) // __AUTO_GENERATED_PRINT_VAR_END__
+	for _, b := range bufOut {
 		for j := range b.val {
 			if b.val[j] != -1 {
 				out += i * b.val[j]

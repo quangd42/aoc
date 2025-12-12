@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	_ "embed"
 	"fmt"
 	"log"
@@ -125,10 +124,63 @@ func newGridWide(g grid.Grid) grid.Grid {
 	return out
 }
 
+func moveWide(p grid.Pos, g grid.Grid, d grid.Dir) bool {
+	// find dest pos
+	dest := p.Move1(d)
+	if g.ValueAt(dest) == '#' {
+		// if dest pos == '#', return, move nothing
+		return false
+	}
+	// if move robot or move boxes sideway, use previous move logic
+	if (d == grid.DirLeft || d == grid.DirRight) && (g.ValueAt(dest) == '[' || g.ValueAt(dest) == ']') {
+		if !moveWide(dest, g, d) {
+			return false
+		}
+		g[dest.Y][dest.X] = g.ValueAt(p)
+		g[p.Y][p.X] = '.'
+		return true
+	}
+	return false
+}
+
 func part2(input string) int {
 	out := 0
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	for scanner.Scan() {
+	gStr, iStr, found := strings.Cut(strings.TrimSpace(input), "\n\n")
+	if !found {
+		log.Fatal("bad input, no empty line")
+	}
+	g := newGridWide(grid.NewGrid(gStr))
+	// __AUTO_GENERATED_PRINT_VAR_START__
+	fmt.Println(fmt.Sprintf("part2 start state:\n %v", g)) // __AUTO_GENERATED_PRINT_VAR_END__
+	dirs := getInstructions(iStr)
+
+	var rb grid.Pos
+	for y, row := range g {
+		for x, r := range row {
+			if r == '@' {
+				rb = grid.Pos{X: x, Y: y}
+			}
+		}
+	}
+	count := 0
+	for _, dir := range dirs {
+		if moveWide(rb, g, dir) {
+			rb = rb.Move1(dir)
+		}
+		// __AUTO_GENERATED_PRINT_VAR_START__
+		fmt.Println(fmt.Sprintf("part2 g:\n %v", g)) // __AUTO_GENERATED_PRINT_VAR_END__
+		count++
+		if count == 2 {
+			break
+		}
+	}
+
+	for y, row := range g {
+		for x, r := range row {
+			if r == '[' {
+				out += x + 100*y
+			}
+		}
 	}
 	return out
 }
