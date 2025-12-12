@@ -18,13 +18,35 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const day_option = b.option(u8, "day", "Advent of Code day to compile") orelse 1;
+    var day_option = b.option(u8, "day", "Advent of Code day to compile") orelse 0;
     const input_option = b.option(input, "input", "Input file") orelse .example;
+
+    var cwd = std.fs.cwd();
+    if (day_option == 0) {
+        var cur_dir = try cwd.openDir(".", .{ .iterate = true });
+        defer cur_dir.close();
+
+        var it = cur_dir.iterate();
+        var hi: u8 = 0;
+        while (try it.next()) |entry| {
+            switch (entry.kind) {
+                .directory => {
+                    const n = std.fmt.parseInt(u8, entry.name, 10) catch continue;
+                    if (n > hi) hi = n;
+                },
+                else => {},
+            }
+        }
+        if (hi == 0) {
+            std.debug.print("No solution has been created yet!", .{});
+            std.process.exit(0);
+        }
+        day_option = hi;
+    }
 
     var path_buf: [64]u8 = undefined;
     const source_path = std.fmt.bufPrint(&path_buf, "{d:0>2}/main.cpp", .{day_option}) catch @panic("OOM");
 
-    var cwd = std.fs.cwd();
     cwd.access(source_path, .{ .mode = .read_only }) catch |err| switch (err) {
         error.FileNotFound => {
             std.debug.print("FileNotFound: {s}\n", .{source_path});
