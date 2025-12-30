@@ -97,7 +97,7 @@ const input = enum {
         const cwd_path = std.fs.cwd().realpath(".", &path_buf) catch @panic("failed to get cwd's real path");
         return switch (i) {
             .example => std.fmt.bufPrint(buf, "{s}/{d:0>2}/example.txt", .{ cwd_path, day }) catch @panic("OOM"),
-            .full => std.fmt.bufPrint(buf, "{s}/{d:0>2}/input.txt", .{ cwd_path, day }) catch @panic("OOM"),
+            .full => std.fmt.bufPrint(buf, "{s}/{d:0>2}/full.txt", .{ cwd_path, day }) catch @panic("OOM"),
         };
     }
 };
